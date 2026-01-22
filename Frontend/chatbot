@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AI Tutor - Focused Learning</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style type="text/tailwindcss">
+        :root {
+            --bg-main: #0a0a0a;
+            --bg-side: #0e0e0e;
+            --border-color: #1f1f1f;
+            --text-primary: #e5e5e5;
+            --text-secondary: #a3a3a3;
+            --accent: #525252;
+            --code-bg: #141414;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+        }
+        .code-font {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #262626;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #404040;
+        }
+        textarea:focus {
+            outline: none;
+            box-shadow: none;
+        }
+    </style>
+</head>
+<body class="h-screen overflow-hidden">
+<div class="flex h-full w-full">
+<aside class="w-[35%] h-full flex flex-col items-center justify-center bg-[var(--bg-side)] border-r border-[var(--border-color)]">
+<div class="w-full h-full flex items-center justify-center p-12">
+<div class="relative w-full max-w-sm aspect-[3/4] flex items-center justify-center">
+<img alt="AI Tutor Character" class="w-full h-full object-contain grayscale opacity-80" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB-ffYCtX-rceACFgAD4yvmtt5pb-wBqvo36msQlSb5_6sbvXcJpmSXWjP6jzk6KyWMIVD7IKeywhTYcynJOHc8sUQbNSFQoZfcckwIReDVXblf_FeUeX9W5mNioBjtLBf5s1rpP3yBLNN63BqfEeGprxwmnJP1XNjoQOSyV9SNDPROoF68gZmuwMlkmpDsIKbVAY-P8I-LXMeNZiqRRcBQsLXkLNKvApi903C6JXNCuCuuIHh70Fv0rWz4QKm0RGud2AfhhPYXmhQ"/>
+</div>
+</div>
+</aside>
+<main class="w-[65%] h-full flex flex-col relative bg-[var(--bg-main)]">
+<div class="flex-1 overflow-y-auto custom-scrollbar pt-20 pb-32 px-16 lg:px-24">
+<div class="max-w-3xl mx-auto space-y-24">
+<div class="space-y-8">
+<div class="flex flex-col gap-2">
+<span class="text-[var(--text-secondary)] text-sm font-medium uppercase tracking-widest">You</span>
+<p class="text-2xl text-[var(--text-primary)] font-light leading-snug">
+                                How do I define a function in Python and why is it useful?
+                            </p>
+</div>
+<div class="flex flex-col gap-6">
+<div class="flex flex-col gap-2">
+<span class="text-[var(--accent)] text-sm font-medium uppercase tracking-widest">AI Tutor</span>
+<div class="text-xl text-[var(--text-secondary)] leading-relaxed space-y-4">
+<p>Functions are reusable blocks of code that perform a specific task. They help keep your code dry (Don't Repeat Yourself) and organized.</p>
+<p>You define them using the <code class="code-font text-[var(--text-primary)] bg-[var(--code-bg)] px-1.5 rounded">def</code> keyword followed by the function name and parentheses.</p>
+</div>
+</div>
+<div class="group relative bg-[var(--code-bg)] border border-[var(--border-color)] rounded-lg overflow-hidden">
+<div class="flex items-center justify-between px-4 py-2 bg-white/5 border-b border-[var(--border-color)]">
+<span class="text-xs font-mono text-[var(--text-secondary)]">python</span>
+<button class="flex items-center gap-1.5 text-xs text-[var(--text-secondary)] hover:text-white transition-colors">
+<span class="material-symbols-outlined text-sm">content_copy</span>
+<span>Copy</span>
+</button>
+</div>
+<div class="p-6 overflow-x-auto">
+<pre class="code-font text-lg text-[#d4d4d4] leading-relaxed"><code>def greet(name):
+    """Simple function to greet a user"""
+    return f"Hello, {name}!"
+# Calling the function
+message = greet("Alex")
+print(message)</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="space-y-8">
+<div class="flex flex-col gap-2 border-t border-[var(--border-color)] pt-12">
+<span class="text-[var(--text-secondary)] text-sm font-medium uppercase tracking-widest">You</span>
+<p class="text-2xl text-[var(--text-primary)] font-light leading-snug">
+                                What about default parameters?
+                            </p>
+</div>
+<div class="flex flex-col gap-6">
+<div class="flex flex-col gap-2">
+<span class="text-[var(--accent)] text-sm font-medium uppercase tracking-widest">AI Tutor</span>
+<div class="text-xl text-[var(--text-secondary)] leading-relaxed space-y-4">
+<p>Default parameters allow you to provide a fallback value if no argument is passed during the function call. This makes your functions more flexible.</p>
+</div>
+</div>
+<div class="group relative bg-[var(--code-bg)] border border-[var(--border-color)] rounded-lg overflow-hidden">
+<div class="flex items-center justify-between px-4 py-2 bg-white/5 border-b border-[var(--border-color)]">
+<span class="text-xs font-mono text-[var(--text-secondary)]">python</span>
+<button class="flex items-center gap-1.5 text-xs text-[var(--text-secondary)] hover:text-white transition-colors">
+<span class="material-symbols-outlined text-sm">content_copy</span>
+<span>Copy</span>
+</button>
+</div>
+<div class="p-6 overflow-x-auto">
+<pre class="code-font text-lg text-[#d4d4d4] leading-relaxed"><code>def greet(name="Student"):
+    return f"Hello, {name}!"
+print(greet())          # Output: Hello, Student!
+print(greet("Sarah"))   # Output: Hello, Sarah!</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="absolute bottom-0 left-0 w-full p-8 bg-gradient-to-t from-[var(--bg-main)] via-[var(--bg-main)] to-transparent">
+<div class="max-w-3xl mx-auto relative flex items-center">
+<input class="w-full bg-transparent border-b border-[var(--border-color)] focus:border-[var(--text-secondary)] py-4 pr-12 text-xl font-light placeholder:text-[var(--accent)] transition-colors border-t-0 border-x-0 rounded-none ring-0 focus:ring-0" placeholder="Ask a question..." type="text"/>
+<button class="absolute right-0 text-[var(--text-secondary)] hover:text-white transition-colors p-2">
+<span class="material-symbols-outlined text-2xl">arrow_forward</span>
+</button>
+</div>
+</div>
+</main>
+</div>
+
+</body></html>
