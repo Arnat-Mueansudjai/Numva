@@ -1,71 +1,154 @@
 import express from "express";
-import fetch from "node-fetch";
-import dotenv from "dotenv";
-
-dotenv.config();
 
 const app = express();
+const PORT = 3000;
+
+// middleware
 app.use(express.json());
 app.use(express.static("public"));
 
-const SYSTEM_PROMPT = `
-You are an AI tutor named "น้องน้ำว้า".
-
-Personality:
-- Friendly Thai tutor
-- Explain step by step
-- Use simple Thai words
-- Encourage students
-- Never shame or judge
-- Use emojis lightly 
-
-Rules:
-- Always explain with examples
-- Ask if the student understands
-- If coding, show code blocks
-- Keep answers concise but clear
-
-You teach:
-- JavaScript, Node.js, SQL, Git
-- Basic math
-- English basics
-
-Always reply in Thai.
-Call the user "นักเรียน".
-`;
-
+// 🧠 Route แชต
 app.post("/chat", async (req, res) => {
   try {
-    const userMessage = req.body.message;
+    console.log("📦 body ที่ส่งมา =", req.body);
 
-    const response = await fetch(
-      "https://api.openai.com/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          model: "gpt-4o-mini",
-          messages: [
-            { role: "system", content: SYSTEM_PROMPT },
-            { role: "user", content: userMessage }
-          ]
-        })
-      }
-    );
+    const userMessage = (req.body.message || "").toLowerCase();
+    console.log("📩 นักเรียนถาม =", userMessage);
 
-    const data = await response.json();
-    const reply = data.choices[0].message.content;
+    // 👉 for loop
+    if (
+      userMessage.includes("for") ||
+      userMessage.includes("for loop") ||
+      userMessage.includes("ลูป") ||
+      userMessage.includes("วนซ้ำ")
+    ) {
+      return res.json({
+        reply: `นักเรียน 💖  
+for loop คือการวนซ้ำคำสั่งเดิมหลาย ๆ รอบ  
+ใช้เมื่อเรารู้จำนวนรอบล่วงหน้า 😊  
 
-    res.json({ reply });
+ตัวอย่าง:  
+\`\`\`js
+for (let i = 0; i < 5; i++) {
+  console.log(i);
+}
+\`\`\`
+
+อธิบายทีละบรรทัด:  
+- let i = 0 → เริ่มนับจาก 0  
+- i < 5 → ทำซ้ำจน i น้อยกว่า 5  
+- i++ → เพิ่มค่า i ทีละ 1  
+
+ผลลัพธ์ที่ได้:  
+0  
+1  
+2  
+3  
+4  
+
+นักเรียนเข้าใจไหมเอ่ย 😆`
+      });
+    }
+
+    // 👉 while loop
+    if (userMessage.includes("while")) {
+      return res.json({
+        reply: `นักเรียน 💖  
+while loop คือการวนซ้ำ "ตราบใดที่เงื่อนไขยังเป็นจริง"  
+
+ตัวอย่าง:  
+\`\`\`js
+let i = 0;
+
+while (i < 3) {
+  console.log(i);
+  i++;
+}
+\`\`\`
+
+จะพิมพ์:  
+0  
+1  
+2  
+
+ต่างจาก for ตรงที่  
+- while ไม่รู้จำนวนรอบแน่นอนล่วงหน้า  
+
+นักเรียนพอเข้าใจไหม 😊`
+      });
+    }
+
+    // 👉 array
+    if (userMessage.includes("array") || userMessage.includes("อาเรย์")) {
+      return res.json({
+        reply: `นักเรียน 💖  
+Array คือกล่องเก็บข้อมูลหลายค่าในตัวแปรเดียว  
+
+ตัวอย่าง:  
+\`\`\`js
+let fruits = ["apple", "banana", "mango"];
+console.log(fruits[0]); // apple
+\`\`\`
+
+- fruits[0] → ตัวแรก  
+- fruits[1] → ตัวที่สอง  
+
+ใช้คู่กับ for loop บ่อยมาก 😆  
+
+นักเรียนเข้าใจไหมเอ่ย`
+      });
+    }
+
+    // 👉 git
+    if (userMessage.includes("git")) {
+      return res.json({
+        reply: `นักเรียน 💖  
+Git คือระบบจัดการเวอร์ชันของโค้ด  
+
+คำสั่งพื้นฐาน:  
+\`\`\`bash
+git init
+git add .
+git commit -m "first commit"
+\`\`\`
+
+- git init → เริ่ม repo  
+- git add . → เตรียมไฟล์  
+- git commit → บันทึกเวอร์ชัน  
+
+นักเรียนอยากให้สอน branch ต่อไหม 😆`
+      });
+    }
+
+    // 👉 sql
+    if (userMessage.includes("sql")) {
+      return res.json({
+        reply: `นักเรียน 💖  
+SQL ใช้จัดการข้อมูลในฐานข้อมูล  
+
+ตัวอย่าง SELECT:  
+\`\`\`sql
+SELECT * FROM users;
+\`\`\`
+
+ดึงข้อมูลทั้งหมดจากตาราง users  
+
+อยากให้สอน WHERE ต่อไหม 😊`
+      });
+    }
+
+    // 👉 fallback
+    return res.json({
+      reply: "ขอโทษนะนักเรียน 🥲 น้ำว้ายังตอบคำถามนี้ไม่ได้ตอนนี้"
+    });
+
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "AI error" });
+    console.error("❌ ERROR:", err);
+    res.status(500).json({ error: "server error" });
   }
 });
 
-app.listen(3000, () => {
-  console.log("✅ Server running at http://localhost:3000");
+// ▶ start server
+app.listen(PORT, () => {
+  console.log(`✅ Server running at http://localhost:${PORT}`);
 });
