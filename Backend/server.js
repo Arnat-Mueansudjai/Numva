@@ -18,16 +18,12 @@ if (!process.env.GEMINI_API_KEY) {
   console.error("❌ ยังไม่ได้ตั้ง GEMINI_API_KEY ใน .env");
   process.exit(1);
 }
-
 async function callGemini(prompt) {
-  // ✅ เปลี่ยนชื่อโมเดลเป็น gemini-1.5-flash-latest (ระบุ -latest ต่อท้าย)
-  // และใช้ v1beta เหมือนเดิม
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${process.env.GEMINI_API_KEY}`;
+  // ✅ ใช้ v1 (เวอร์ชันเสถียร) และ gemini-1.5-flash เป็นรุ่นมาตรฐาน
+  const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`;
 
   const body = {
-    contents: [{
-      parts: [{ text: prompt }]
-    }]
+    contents: [{ parts: [{ text: prompt }] }]
   };
 
   try {
@@ -37,16 +33,14 @@ async function callGemini(prompt) {
       body: JSON.stringify(body)
     });
 
-    const rawText = await resp.text();
+    const data = await resp.json();
 
     if (!resp.ok) {
-      console.error("❌ Google API Error Detail:", rawText);
+      console.error("❌ Google API Error:", data);
       throw new Error(`API Error ${resp.status}`);
     }
 
-    const data = JSON.parse(rawText);
-    
-    // ดึงคำตอบจากโครงสร้าง JSON ของ Gemini 1.5
+    // ดึงคำตอบจากโครงสร้าง JSON
     return data.candidates?.[0]?.content?.parts?.[0]?.text || "ครูน้ำว้ายังไม่มีคำตอบเลยจ้า";
 
   } catch (error) {
