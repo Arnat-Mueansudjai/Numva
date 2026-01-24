@@ -1,71 +1,94 @@
 import express from "express";
-import fetch from "node-fetch";
 import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
 
 dotenv.config();
 
 const app = express();
+const PORT = 3001;
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 app.use(express.json());
-app.use(express.static("public"));
+app.use(express.static(path.join(__dirname, "../Front")));
 
-const SYSTEM_PROMPT = `
-You are an AI tutor named "น้องน้ำว้า".
+// 1. ตรวจสอบ API KEY
+if (!process.env.GEMINI_API_KEY) {
+  console.error("❌ ยังไม่ได้ตั้ง GEMINI_API_KEY ใน .env");
+  process.exit(1);
+}
 
-Personality:
-- Friendly Thai tutor
-- Explain step by step
-- Use simple Thai words
-- Encourage students
-- Never shame or judge
-- Use emojis lightly 
+// 2. ฟังก์ชันตรวจสอบรายชื่อโมเดล (ใช้เพื่อยืนยันสิทธิ์)
+async function listAvailableModels() {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${process.env.GEMINI_API_KEY}`;
+  try {
+    const resp = await fetch(url);
+    const data = await resp.json();
+    console.log("------------------------------------------");
+    console.log("📋 รายชื่อโมเดลที่คุณใช้งานได้ตอนนี้:");
+    data.models?.forEach(m => console.log(`- ${m.name}`));
+    console.log("------------------------------------------");
+  } catch (err) {
+    console.error("❌ ดึงรายชื่อโมเดลไม่สำเร็จ:", err.message);
+  }
+}
 
-Rules:
-- Always explain with examples
-- Ask if the student understands
-- If coding, show code blocks
-- Keep answers concise but clear
+// 3. ฟังก์ชันเรียกใช้งาน Gemini API (ปรับปรุงเพื่อรุ่น 2.0)
+async function callGemini(prompt) {
+  // ✅ เปลี่ยนมาใช้ gemini-2.0-flash ตามที่ระบบระบุว่าใช้ได้
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`;
 
-You teach:
-- JavaScript, Node.js, SQL, Git
-- Basic math
-- English basics
+  const body = {
+    contents: [{ parts: [{ text: prompt }] }]
+  };
 
-Always reply in Thai.
-Call the user "นักเรียน".
-`;
+  try {
+    const resp = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
 
+    const data = await resp.json();
+
+    if (!resp.ok) {
+      console.error("❌ Google API Error:", JSON.stringify(data));
+      throw new Error(`API Error ${resp.status}`);
+    }
+
+    // ดึงคำตอบจากโครงสร้าง JSON
+    return data.candidates?.[0]?.content?.parts?.[0]?.text || "ครูน้ำว้ายังไม่มีคำตอบเลยจ้า";
+
+  } catch (error) {
+    console.error("❌ callGemini Error:", error.message);
+    throw error;
+  }
+}
+
+// 4. Route สำหรับระบบแชท
 app.post("/chat", async (req, res) => {
   try {
-    const userMessage = req.body.message;
+    const userMessage = (req.body.message || "").trim();
+    if (!userMessage) return res.json({ reply: "ครูน้ำว้า 😅 นักเรียนถามอะไรเอ่ย?" });
 
-    const response = await fetch(
-      "https://api.openai.com/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          model: "gpt-4o-mini",
-          messages: [
-            { role: "system", content: SYSTEM_PROMPT },
-            { role: "user", content: userMessage }
-          ]
-        })
-      }
-    );
+    // กำหนด Prompt และบุคลิกให้ครูน้ำว้า
+    const prompt = `คุณคือ "ครูน้ำว้า" ครูสอนโปรแกรมมิ่งใจดี พูดจาน่ารัก มีคะ/ขา\nคำถาม: ${userMessage}`;
+    const text = await callGemini(prompt);
+    
+    return res.json({ reply: "ครูน้ำว้า 💖\n" + text });
 
-    const data = await response.json();
-    const reply = data.choices[0].message.content;
-
-    res.json({ reply });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "AI error" });
+    return res.json({ reply: "ครูน้ำว้า 🥲 ระบบขัดข้อง: " + err.message });
   }
 });
 
-app.listen(3000, () => {
-  console.log("✅ Server running at http://localhost:3000");
+// 5. เริ่มต้นการทำงานของ Server
+app.listen(PORT, async () => {
+  console.log(`✅ Server running at http://localhost:${PORT}`);
+  console.log("🔑 KEY loaded =", process.env.GEMINI_API_KEY ? "YES" : "NO");
+  
+  // ตรวจสอบโมเดลที่ใช้งานได้ทันทีเมื่อเริ่มโปรแกรม
+  await listAvailableModels();
 });
