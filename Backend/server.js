@@ -20,8 +20,9 @@ if (!process.env.GEMINI_API_KEY) {
 }
 
 async function callGemini(prompt) {
-  // เปลี่ยนชื่อโมเดลเป็น gemini-1.5-flash (ตัวมาตรฐานที่รองรับ v1beta)
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`;
+  // ✅ เปลี่ยนชื่อโมเดลเป็น gemini-1.5-flash-latest (ระบุ -latest ต่อท้าย)
+  // และใช้ v1beta เหมือนเดิม
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${process.env.GEMINI_API_KEY}`;
 
   const body = {
     contents: [{
