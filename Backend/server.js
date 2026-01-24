@@ -1,26 +1,52 @@
 import express from "express";
+import dotenv from "dotenv";
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import path from "path";
+import { fileURLToPath } from "url";
+
+dotenv.config();
 
 const app = express();
 const PORT = 3000;
 
-// middleware
+// ===== path สำหรับ Front =====
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 app.use(express.json());
-app.use(express.static("public"));
+app.use(express.static(path.join(__dirname, "../Front")));
+
+// ===== Gemini setup =====
+if (!process.env.GEMINI_API_KEY) {
+  console.error("❌ ยังไม่ได้ตั้ง GEMINI_API_KEY ใน .env");
+  process.exit(1);
+}
+
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 // 🧠 Route แชต
 app.post("/chat", async (req, res) => {
   try {
-    console.log("📦 body ที่ส่งมา =", req.body);
+    console.log("📦 body =", req.body);
 
-    const userMessage = (req.body.message || "").toLowerCase();
+    const userMessage = (req.body.message || "").trim();
     console.log("📩 นักเรียนถาม =", userMessage);
+
+    if (!userMessage) {
+      return res.json({
+        reply: "ครูน้ำว้า 😅 นักเรียนยังไม่ได้พิมพ์คำถามเลยนะ"
+      });
+    }
+
+    const lower = userMessage.toLowerCase();
 
     // 👉 for loop
     if (
-      userMessage.includes("for") ||
-      userMessage.includes("for loop") ||
-      userMessage.includes("ลูป") ||
-      userMessage.includes("วนซ้ำ")
+      lower.includes("for") ||
+      lower.includes("for loop") ||
+      lower.includes("ลูป") ||
+      lower.includes("วนซ้ำ")
     ) {
       return res.json({
         reply: `นักเรียน 💖  
@@ -39,7 +65,7 @@ for (let i = 0; i < 5; i++) {
 - i < 5 → ทำซ้ำจน i น้อยกว่า 5  
 - i++ → เพิ่มค่า i ทีละ 1  
 
-ผลลัพธ์ที่ได้:  
+ผลลัพธ์:  
 0  
 1  
 2  
@@ -50,57 +76,8 @@ for (let i = 0; i < 5; i++) {
       });
     }
 
-    // 👉 while loop
-    if (userMessage.includes("while")) {
-      return res.json({
-        reply: `นักเรียน 💖  
-while loop คือการวนซ้ำ "ตราบใดที่เงื่อนไขยังเป็นจริง"  
-
-ตัวอย่าง:  
-\`\`\`js
-let i = 0;
-
-while (i < 3) {
-  console.log(i);
-  i++;
-}
-\`\`\`
-
-จะพิมพ์:  
-0  
-1  
-2  
-
-ต่างจาก for ตรงที่  
-- while ไม่รู้จำนวนรอบแน่นอนล่วงหน้า  
-
-นักเรียนพอเข้าใจไหม 😊`
-      });
-    }
-
-    // 👉 array
-    if (userMessage.includes("array") || userMessage.includes("อาเรย์")) {
-      return res.json({
-        reply: `นักเรียน 💖  
-Array คือกล่องเก็บข้อมูลหลายค่าในตัวแปรเดียว  
-
-ตัวอย่าง:  
-\`\`\`js
-let fruits = ["apple", "banana", "mango"];
-console.log(fruits[0]); // apple
-\`\`\`
-
-- fruits[0] → ตัวแรก  
-- fruits[1] → ตัวที่สอง  
-
-ใช้คู่กับ for loop บ่อยมาก 😆  
-
-นักเรียนเข้าใจไหมเอ่ย`
-      });
-    }
-
     // 👉 git
-    if (userMessage.includes("git")) {
+    if (lower.includes("git")) {
       return res.json({
         reply: `นักเรียน 💖  
 Git คือระบบจัดการเวอร์ชันของโค้ด  
@@ -116,39 +93,41 @@ git commit -m "first commit"
 - git add . → เตรียมไฟล์  
 - git commit → บันทึกเวอร์ชัน  
 
-นักเรียนอยากให้สอน branch ต่อไหม 😆`
+นักเรียนอยากให้ครูน้ำว้าสอน branch ต่อไหม 😆`
       });
     }
 
-    // 👉 sql
-    if (userMessage.includes("sql")) {
-      return res.json({
-        reply: `นักเรียน 💖  
-SQL ใช้จัดการข้อมูลในฐานข้อมูล  
+    // 👉 fallback → ส่งเข้า Gemini
+    const prompt = `
+คุณคือ "ครูน้ำว้า" 💖  
+นิสัย: ใจดี เป็นกันเอง  
+พูดภาษาไทย  
+อธิบายให้มือใหม่เข้าใจง่าย  
+ตอบสั้น กระชับ แต่เข้าใจง่าย  
 
-ตัวอย่าง SELECT:  
-\`\`\`sql
-SELECT * FROM users;
-\`\`\`
+คำถามนักเรียน: ${userMessage}
+`;
 
-ดึงข้อมูลทั้งหมดจากตาราง users  
+    const result = await model.generateContent(prompt);
+    const text = result.response.text();
 
-อยากให้สอน WHERE ต่อไหม 😊`
-      });
-    }
+    console.log("🤖 Gemini =", text);
 
-    // 👉 fallback
     return res.json({
-      reply: "ขอโทษนะนักเรียน 🥲 น้ำว้ายังตอบคำถามนี้ไม่ได้ตอนนี้"
+      reply: "ครูน้ำว้า 💖\n" + text
     });
 
   } catch (err) {
     console.error("❌ ERROR:", err);
-    res.status(500).json({ error: "server error" });
+
+    return res.status(500).json({
+      reply: "ครูน้ำว้า 🥲 ขอโทษนะนักเรียน ระบบ AI มีปัญหานิดหน่อย"
+    });
   }
 });
 
 // ▶ start server
 app.listen(PORT, () => {
   console.log(`✅ Server running at http://localhost:${PORT}`);
+  console.log("🔑 KEY loaded =", process.env.GEMINI_API_KEY ? "YES" : "NO");
 });

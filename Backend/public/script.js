@@ -3,7 +3,7 @@ async function sendMessage() {
   const message = input.value.trim();
   if (!message) return;
 
-  addMessage("นักเรียน", message);
+  addMessage("นิสิต", message);
   input.value = "";
 
   setTuberTalking(true);
@@ -31,7 +31,7 @@ async function sendMessage() {
 function addMessage(sender, text) {
   const box = document.getElementById("chat-box");
   const div = document.createElement("div");
-  div.className = sender === "นักเรียน" ? "user" : "bot";
+  div.className = sender === "นิสิต" ? "user" : "bot";
   div.innerText = `${sender}: ${text}`;
   box.appendChild(div);
   box.scrollTop = box.scrollHeight;
