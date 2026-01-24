@@ -14,13 +14,31 @@ const __dirname = path.dirname(__filename);
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "../Front")));
 
+// 1. ตรวจสอบ API KEY
 if (!process.env.GEMINI_API_KEY) {
   console.error("❌ ยังไม่ได้ตั้ง GEMINI_API_KEY ใน .env");
   process.exit(1);
 }
+
+// 2. ฟังก์ชันตรวจสอบรายชื่อโมเดล (ใช้เพื่อยืนยันสิทธิ์)
+async function listAvailableModels() {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${process.env.GEMINI_API_KEY}`;
+  try {
+    const resp = await fetch(url);
+    const data = await resp.json();
+    console.log("------------------------------------------");
+    console.log("📋 รายชื่อโมเดลที่คุณใช้งานได้ตอนนี้:");
+    data.models?.forEach(m => console.log(`- ${m.name}`));
+    console.log("------------------------------------------");
+  } catch (err) {
+    console.error("❌ ดึงรายชื่อโมเดลไม่สำเร็จ:", err.message);
+  }
+}
+
+// 3. ฟังก์ชันเรียกใช้งาน Gemini API (ปรับปรุงเพื่อรุ่น 2.0)
 async function callGemini(prompt) {
-  // ✅ ใช้ v1beta และชื่อโมเดล gemini-1.5-flash
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`;
+  // ✅ เปลี่ยนมาใช้ gemini-2.0-flash ตามที่ระบบระบุว่าใช้ได้
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`;
 
   const body = {
     contents: [{ parts: [{ text: prompt }] }]
@@ -36,24 +54,26 @@ async function callGemini(prompt) {
     const data = await resp.json();
 
     if (!resp.ok) {
-      console.error("❌ Google API Error:", data);
+      console.error("❌ Google API Error:", JSON.stringify(data));
       throw new Error(`API Error ${resp.status}`);
     }
 
+    // ดึงคำตอบจากโครงสร้าง JSON
     return data.candidates?.[0]?.content?.parts?.[0]?.text || "ครูน้ำว้ายังไม่มีคำตอบเลยจ้า";
+
   } catch (error) {
     console.error("❌ callGemini Error:", error.message);
     throw error;
   }
 }
 
-// Route แชต
+// 4. Route สำหรับระบบแชท
 app.post("/chat", async (req, res) => {
   try {
     const userMessage = (req.body.message || "").trim();
     if (!userMessage) return res.json({ reply: "ครูน้ำว้า 😅 นักเรียนถามอะไรเอ่ย?" });
 
-    // ส่งให้ AI ตอบ
+    // กำหนด Prompt และบุคลิกให้ครูน้ำว้า
     const prompt = `คุณคือ "ครูน้ำว้า" ครูสอนโปรแกรมมิ่งใจดี พูดจาน่ารัก มีคะ/ขา\nคำถาม: ${userMessage}`;
     const text = await callGemini(prompt);
     
@@ -64,7 +84,11 @@ app.post("/chat", async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
+// 5. เริ่มต้นการทำงานของ Server
+app.listen(PORT, async () => {
   console.log(`✅ Server running at http://localhost:${PORT}`);
   console.log("🔑 KEY loaded =", process.env.GEMINI_API_KEY ? "YES" : "NO");
+  
+  // ตรวจสอบโมเดลที่ใช้งานได้ทันทีเมื่อเริ่มโปรแกรม
+  await listAvailableModels();
 });
