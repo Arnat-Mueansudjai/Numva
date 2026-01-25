@@ -14,13 +14,13 @@ const __dirname = path.dirname(__filename);
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "../Front")));
 
-// 1. ตรวจสอบ API KEY
+// ตรวจสอบ API KEY
 if (!process.env.GEMINI_API_KEY) {
   console.error("❌ ยังไม่ได้ตั้ง GEMINI_API_KEY ใน .env");
   process.exit(1);
 }
 
-// 2. ฟังก์ชันตรวจสอบรายชื่อโมเดล (ใช้เพื่อยืนยันสิทธิ์)
+// ฟังก์ชันตรวจสอบรายชื่อโมเดลที่ใช้งานได้
 async function listAvailableModels() {
   const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${process.env.GEMINI_API_KEY}`;
   try {
@@ -35,9 +35,8 @@ async function listAvailableModels() {
   }
 }
 
-// 3. ฟังก์ชันเรียกใช้งาน Gemini API (ปรับปรุงเพื่อรุ่น 2.0)
+// ฟังก์ชันเรียกใช้งาน Gemini API (รุ่น 2.0 Flash)
 async function callGemini(prompt) {
-  // ✅ เปลี่ยนมาใช้ gemini-2.0-flash ตามที่ระบบระบุว่าใช้ได้
   const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`;
 
   const body = {
@@ -58,37 +57,30 @@ async function callGemini(prompt) {
       throw new Error(`API Error ${resp.status}`);
     }
 
-    // ดึงคำตอบจากโครงสร้าง JSON
     return data.candidates?.[0]?.content?.parts?.[0]?.text || "ครูน้ำว้ายังไม่มีคำตอบเลยจ้า";
-
   } catch (error) {
     console.error("❌ callGemini Error:", error.message);
     throw error;
   }
 }
 
-// 4. Route สำหรับระบบแชท
+// Route สำหรับระบบแชท
 app.post("/chat", async (req, res) => {
   try {
     const userMessage = (req.body.message || "").trim();
     if (!userMessage) return res.json({ reply: "ครูน้ำว้า 😅 นักเรียนถามอะไรเอ่ย?" });
 
-    // กำหนด Prompt และบุคลิกให้ครูน้ำว้า
     const prompt = `คุณคือ "ครูน้ำว้า" ครูสอนโปรแกรมมิ่งใจดี พูดจาน่ารัก มีคะ/ขา\nคำถาม: ${userMessage}`;
     const text = await callGemini(prompt);
     
     return res.json({ reply: "ครูน้ำว้า 💖\n" + text });
-
   } catch (err) {
     return res.json({ reply: "ครูน้ำว้า 🥲 ระบบขัดข้อง: " + err.message });
   }
 });
 
-// 5. เริ่มต้นการทำงานของ Server
 app.listen(PORT, async () => {
   console.log(`✅ Server running at http://localhost:${PORT}`);
   console.log("🔑 KEY loaded =", process.env.GEMINI_API_KEY ? "YES" : "NO");
-  
-  // ตรวจสอบโมเดลที่ใช้งานได้ทันทีเมื่อเริ่มโปรแกรม
   await listAvailableModels();
 });
