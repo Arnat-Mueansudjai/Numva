@@ -48,7 +48,13 @@
 <aside class="w-[35%] h-full flex flex-col items-center justify-center bg-[var(--bg-side)] border-r border-[var(--border-color)]">
 <div class="w-full h-full flex items-center justify-center p-12">
 <div class="relative w-full max-w-sm aspect-[3/4] flex items-center justify-center">
-<img alt="AI Tutor Character" class="w-full h-full object-contain grayscale opacity-80" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB-ffYCtX-rceACFgAD4yvmtt5pb-wBqvo36msQlSb5_6sbvXcJpmSXWjP6jzk6KyWMIVD7IKeywhTYcynJOHc8sUQbNSFQoZfcckwIReDVXblf_FeUeX9W5mNioBjtLBf5s1rpP3yBLNN63BqfEeGprxwmnJP1XNjoQOSyV9SNDPROoF68gZmuwMlkmpDsIKbVAY-P8I-LXMeNZiqRRcBQsLXkLNKvApi903C6JXNCuCuuIHh70Fv0rWz4QKm0RGud2AfhhPYXmhQ"/>
+  <!--ตัวคุมภาพทั้งแสดงอารมณ์-->
+<img 
+  id="ai-character"
+  src="assets/idle.png"
+  alt="AI Tutor Character"
+  class="w-full h-full object-contain opacity-80 transition-opacity duration-300"
+/>
 </div>
 </div>
 </aside>
@@ -106,9 +112,11 @@ print(message)</code></pre>
 <div class="group relative bg-[var(--code-bg)] border border-[var(--border-color)] rounded-lg overflow-hidden">
 <div class="flex items-center justify-between px-4 py-2 bg-white/5 border-b border-[var(--border-color)]">
 <span class="text-xs font-mono text-[var(--text-secondary)]">python</span>
-<button class="flex items-center gap-1.5 text-xs text-[var(--text-secondary)] hover:text-white transition-colors">
-<span class="material-symbols-outlined text-sm">content_copy</span>
-<span>Copy</span>
+<button
+  id="send-btn"
+  class="absolute right-0 text-[var(--text-secondary)] hover:text-white transition-colors p-2"
+>
+  <span class="material-symbols-outlined text-2xl">arrow_forward</span>
 </button>
 </div>
 <div class="p-6 overflow-x-auto">
@@ -132,5 +140,77 @@ print(greet("Sarah"))   # Output: Hello, Sarah!</code></pre>
 </div>
 </main>
 </div>
+<!-- JAVA สคริป-->
+<script>
+const character = document.getElementById("ai-character");
+const input = document.querySelector("input");
+const sendButton = document.getElementById("send-btn");
+
+const states = {
+  idle: "assets/idle.png",
+  startled: "assets/startled.png",
+  talking: "assets/talking.png",
+  thinking: "assets/thinking.png",
+  shy: "assets/shy.png"
+};
+
+let hasTyped = false;
+
+// เปลี่ยนรูปตัวละคร
+function setState(state) {
+  character.style.opacity = 0;
+  setTimeout(() => {
+    character.src = states[state];
+    character.style.opacity = 1;
+  }, 150);
+}
+
+// เริ่มต้น = หลับ / นิ่ง
+setState("idle");
+
+// พิมพ์ครั้งแรก → สะดุ้ง
+input.addEventListener("input", () => {
+  if (!hasTyped && input.value.trim() !== "") {
+    hasTyped = true;
+    setState("startled");
+
+    setTimeout(() => {
+      setState("idle");
+    }, 600);
+  }
+});
+
+// วิเคราะห์คำถาม
+function analyzeQuestion(text) {
+  const flirtWords = ["รัก", "ชอบ", "แฟน", "คิดถึง", "จีบ", "น่ารัก"];
+
+  if (flirtWords.some(word => text.includes(word))) {
+    setState("shy");
+    return;
+  }
+
+  if (text.length < 4) {
+    setState("thinking");
+    return;
+  }
+
+  setState("talking");
+
+  // พูดเสร็จ → กลับไปนิ่ง
+  setTimeout(() => {
+    setState("idle");
+  }, 2000);
+}
+
+// กดส่งคำถาม
+sendButton.addEventListener("click", () => {
+  const text = input.value.trim();
+  if (text !== "") {
+    analyzeQuestion(text);
+    input.value = "";
+    hasTyped = false;
+  }
+});
+</script>
 
 </body></html>
