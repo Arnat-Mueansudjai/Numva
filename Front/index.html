@@ -1,25 +1,49 @@
 <!DOCTYPE html>
-<html lang="th">
+<html class="dark" lang="th">
 <head>
-  <meta charset="UTF-8" />
-  <title>น้องน้ำว้า AI Tutor</title>
-  <link rel="stylesheet" href="style.css" />
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>น้องน้ำว้า AI Tutor</title>
+
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="style.css">
+
 </head>
-<body>
-  <h1>น้องน้ำว้า AI ติวเตอร์</h1>
 
-  
-  <div class="tuber-box">
-    <img id="tuber" src="pngtuber/idle.png" width="220" />
-  </div>
+<body class="h-screen overflow-hidden">
+<div class="flex h-full w-full">
 
-  <div id="chat-box"></div>
+  <!-- SIDE CHARACTER -->
+  <aside class="w-[35%] h-full flex items-center justify-center bg-[#0e0e0e] border-r border-[#1f1f1f]">
+    <div class="relative w-full max-w-sm aspect-[3/4] flex items-center justify-center">
+      <img id="ai-character" src="pngtuber/idle.png"
+        class="w-full h-full object-contain opacity-80 transition-opacity duration-300"/>
+    </div>
+  </aside>
 
-  <div class="input-box">
-    <input id="user-input" placeholder="พิมพ์คำถามของคุณ..." />
-    <button onclick="sendMessage()">ส่ง</button>
-  </div>
+  <!-- CHAT -->
+  <main class="w-[65%] h-full flex flex-col relative bg-[#0a0a0a]">
+    <div id="chat-box"
+      class="flex-1 overflow-y-auto pt-20 pb-32 px-16 lg:px-24 space-y-10"></div>
 
-  <script src="script.js"></script>
+    <!-- INPUT -->
+    <div class="absolute bottom-0 left-0 w-full p-8 bg-gradient-to-t from-[#0a0a0a] to-transparent">
+      <div class="max-w-3xl mx-auto relative flex items-center">
+        <input id="user-input"
+        class="w-full bg-transparent border-b border-[#1f1f1f] py-4 pr-12 
+         text-xl text-white placeholder-gray-500 focus:outline-none"placeholder="พิมพ์คำถามของคุณ..." type="text"/>
+
+        <button id="send-btn"
+          class="absolute right-0 text-gray-400 hover:text-white transition-colors p-2">
+          <span class="material-symbols-outlined text-2xl">arrow_forward</span>
+        </button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="script.js"></script>
 </body>
 </html>
