@@ -146,7 +146,10 @@ async function sendMessage() {
     let cleanText = text.replace("ครูน้ำว้า 💖\n", "");
 
     // 🎤 พูด
-    speak(cleanText);
+
+    const speakText = removeEmojis(cleanText);
+    speak(speakText);
+
 
     // 🧱 สร้างบับเบิลบอทเปล่า
     addMessage("ครูน้ำว้า", "");
@@ -166,3 +169,10 @@ async function sendMessage() {
     setState("idle");
   }
 }
+function removeEmojis(text) {
+  return text.replace(
+    /[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu,
+    ""
+  );
+}
+
