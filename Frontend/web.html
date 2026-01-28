@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>ChatPoo</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: "Segoe UI", sans-serif;
+    }
+
+    body {
+      margin: 0;
+      background: #1e1e2f;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .chat-app {
+      width: 900px;
+      height: 500px;
+      background: linear-gradient(135deg, #6a5acd, #7b68ee);
+      border-radius: 20px;
+      display: flex;
+      overflow: hidden;
+      box-shadow: 0 20px 40px rgba(0,0,0,.3);
+    }
+
+    /* ซ้าย */
+    .left {
+      width: 35%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .bot {
+      width: 220px;
+      height: 220px;
+      background: #b19cd9;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 80px;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%,100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    /* ขวา */
+    .right {
+      width: 65%;
+      background: #f3f4fa;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header {
+      padding: 15px 20px;
+      background: #5f4ddc;
+      color: white;
+      font-weight: bold;
+      font-size: 20px;
+    }
+
+    .messages {
+      flex: 1;
+      padding: 15px;
+      overflow-y: auto;
+    }
+
+    .msg {
+      max-width: 70%;
+      padding: 10px 14px;
+      margin-bottom: 10px;
+      border-radius: 16px;
+      font-size: 14px;
+    }
+
+    .user {
+      background: #7b68ee;
+      color: white;
+      margin-left: auto;
+      border-bottom-right-radius: 0;
+    }
+
+    .bot-msg {
+      background: #e0e0f8;
+      color: #333;
+      margin-right: auto;
+      border-bottom-left-radius: 0;
+    }
+
+    .input-box {
+      display: flex;
+      padding: 10px;
+      border-top: 1px solid #ddd;
+    }
+
+    .input-box input {
+      flex: 1;
+      padding: 10px 15px;
+      border-radius: 20px;
+      border: 1px solid #ccc;
+      outline: none;
+    }
+
+    .input-box button {
+      margin-left: 10px;
+      border: none;
+      background: #5f4ddc;
+      color: white;
+      padding: 0 18px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="chat-app">
+  <!-- ซ้าย -->
+  <div class="left">
+    <div class="bot">🐑</div>
+  </div>
+
+  <!-- ขวา -->
+  <div class="right">
+    <div class="header">ChatPoo Bot</div>
+
+    <div class="messages" id="messages">
+      <div class="msg bot-msg">สวัสดี! มาช่วยงานหน่อย?</div>
+    </div>
+
+    <div class="input-box">
+      <input type="text" id="input" placeholder="พิมพ์คำถามที่นี่...">
+      <button onclick="sendMessage()">➤</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const messages = document.getElementById("messages");
+  const input = document.getElementById("input");
+
+  function sendMessage() {
+    const text = input.value.trim();
+    if (!text) return;
+
+    addMessage(text, "user");
+    input.value = "";
+
+    setTimeout(() => {
+      botReply(text);
+    }, 600);
+  }
+
+  function addMessage(text, type) {
+    const msg = document.createElement("div");
+    msg.className = "msg " + (type === "user" ? "user" : "bot-msg");
+    msg.textContent = text;
+    messages.appendChild(msg);
+    messages.scrollTop = messages.scrollHeight;
+  }
+
+  function botReply(userText) {
+    let reply = "ขออภัย ผมยังไม่เข้าใจ 😅";
+
+    if (userText.includes("ช่วย")) reply = "ได้เลย! อยากให้ช่วยเรื่องอะไร?";
+    else if (userText.includes("งาน")) reply = "บอกผมมาได้เลย เดี๋ยวช่วยคิดให้";
+    else if (userText.includes("สวัสดี")) reply = "สวัสดีครับ 👋";
+
+    addMessage(reply, "bot");
+  }
+
+  input.addEventListener("keypress", e => {
+    if (e.key === "Enter") sendMessage();
+  });
+</script>
+
+</body>
+</html>
