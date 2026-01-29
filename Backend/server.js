@@ -3,37 +3,49 @@ import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
 
-// โหลดค่าจากไฟล์ .env
+// 1. โหลดค่า Config จาก .env
 dotenv.config();
 
 const app = express();
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// ตั้งค่า Middleware
+// 2. Middleware
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "../Front")));
 
-// 1. ตรวจสอบ API KEY
+// 3. ตรวจสอบ API KEY
 if (!process.env.GEMINI_API_KEY) {
-  console.error("❌ ยังไม่ได้ตั้ง GEMINI_API_KEY ใน .env");
+  console.error("❌ อย่าลืมตั้งค่า GEMINI_API_KEY ในไฟล์ .env นะคะ!");
   process.exit(1);
 }
 
 /**
- * 2. ฟังก์ชันเรียกใช้งาน Gemini API
- * ปรับปรุงโครงสร้าง JSON เพื่อรองรับ Gemini 2.0 Flash และป้องกัน Error 400
+ * ฟังก์ชันเรียกใช้งาน Gemini 2.5 Pro
  */
-async function callGemini(prompt) {
-  // ใช้ v1beta และโมเดล gemini-2.0-flash ตามสิทธิ์ที่คุณได้รับ
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`;
+async function callGemini(userMessage) {
+  // ✅ ปรับใช้รุ่น 2.5 Pro ตามข้อมูลในหน้า Quota ของหนูเลยค่ะ
+  const model = "gemini-2.5-pro"; 
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${process.env.GEMINI_API_KEY}`;
 
   const body = {
-    contents: [{
-      parts: [{ text: prompt }]
-    }]
+    contents: [
+      {
+        role: "user",
+        parts: [
+          { 
+            text: `คุณคือ "ครูน้ำว้า" ครูสอนโปรแกรมมิ่งใจดี พูดจาน่ารัก มีคะ/ขา และชอบใช้อีโมจิ 💖 คำถาม: ${userMessage}` 
+          }
+        ]
+      }
+    ],
+    generationConfig: {
+      temperature: 0.8,
+      topP: 0.95,
+      maxOutputTokens: 1024,
+    }
   };
 
   try {
@@ -46,44 +58,34 @@ async function callGemini(prompt) {
     const data = await resp.json();
 
     if (!resp.ok) {
-      // แสดงรายละเอียด Error ใน Terminal เพื่อการ Debug
-      console.error("❌ Google API Error Detail:", JSON.stringify(data, null, 2));
-      throw new Error(data.error?.message || "Bad Request");
+      console.error("❌ API Error:", data.error?.message);
+      throw new Error(data.error?.message || "ระบบ API ขัดข้อง");
     }
 
-    // ดึงเนื้อหาคำตอบจาก AI
-    return data.candidates?.[0]?.content?.parts?.[0]?.text || "ครูน้ำว้ายังไม่มีคำตอบเลยจ้า";
-
+    return data.candidates?.[0]?.content?.parts?.[0]?.text || "ครูน้ำว้ายังไม่มีคำตอบให้ข้อนี้จ้า";
   } catch (error) {
-    console.error("❌ callGemini Error:", error.message);
+    console.error("❌ Server Error:", error.message);
     throw error;
   }
 }
 
-/**
- * 3. Route สำหรับรับข้อความแชทจาก Frontend
- */
+// 4. Route สำหรับรับข้อความ
 app.post("/chat", async (req, res) => {
   try {
-    const userMessage = (req.body.message || "").trim();
-    if (!userMessage) return res.json({ reply: "ครูน้ำว้า 😅 นักเรียนถามอะไรเอ่ย?" });
+    const { message } = req.body;
+    if (!message) return res.json({ reply: "พิมพ์อะไรมาหาครูหน่อยเร็ว 💖" });
 
-    // กำหนดบุคลิกให้ "ครูน้ำว้า"
-    const prompt = `คุณคือ "ครูน้ำว้า" ครูสอนโปรแกรมมิ่งใจดี พูดจาน่ารัก มีคะ/ขา และชอบใช้อีโมจิ 💖\nคำถาม: ${userMessage}`;
-    const text = await callGemini(prompt);
+    const text = await callGemini(message);
     
-    // ส่งคำตอบกลับพร้อมหัวข้อ (Prefix) เพื่อให้ Frontend นำไปจัดการต่อ
-    return res.json({ reply: "ครูน้ำว้า 💖\n" + text });
+    // ตอบกลับพร้อมชื่อครู
+    res.json({ reply: "ครูน้ำว้า 💖\n" + text });
 
   } catch (err) {
-    return res.json({ reply: "ครูน้ำว้า 🥲 ระบบขัดข้อง: " + err.message });
+    res.json({ reply: "ครูน้ำว้า 🥲 ระบบขัดข้อง: " + err.message });
   }
 });
 
-/**
- * 4. เริ่มต้นการทำงานของ Server
- */
+// 5. เริ่มการทำงาน
 app.listen(PORT, () => {
-  console.log(`✅ ครูน้ำว้าพร้อมสอนแล้วที่ http://localhost:${PORT}`);
-  console.log("🔑 API Key Status:", process.env.GEMINI_API_KEY ? "Loaded" : "Not Found");
+  console.log(`✅ ครูน้ำว้า (Gemini 2.5 Pro) พร้อมสอนแล้วที่ http://localhost:${PORT}`);
 });
